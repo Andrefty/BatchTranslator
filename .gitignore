@@ -1,1 +1,4 @@
 /venv
+/uiproject/uiapp/__pycache__/
+/uiproject/uiproject/__pycache__/
+/uiproject/uiapp/migrations/

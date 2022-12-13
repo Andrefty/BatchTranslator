@@ -3,7 +3,6 @@ from django.views.generic import CreateView
 from .forms import EmailaddressForm
 from .models import Emailaddress
 from azure.storage.blob import BlobServiceClient
-import uuid
 from django import forms
 
 
@@ -21,8 +20,12 @@ class EmailaddressCreateView(CreateView):
         container_client = blob_service_client.get_container_client(container_name)
         if form.cleaned_data["uploadfile"].content_type != 'application/zip':
             raise forms.ValidationError('The uploaded file must be a zip file')
-        blob_client = container_client.upload_blob(data=form.cleaned_data["uploadfile"], name=str(uuid.uuid4()))
-        form.save()
+        # fn=str(uuid.uuid4())
+        # form.cleaned_data["filename"]=fn
+        print("fromcleaneddata",form.cleaned_data["filename"])
+        blob_client = container_client.upload_blob(data=form.cleaned_data["uploadfile"], name=form.cleaned_data["filename"])
+        # MyModel.objects.create(**cleaned_data)
+        self.object = form.save()
         return super().form_valid(form)
 
 """
