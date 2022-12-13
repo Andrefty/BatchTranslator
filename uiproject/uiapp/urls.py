@@ -1,9 +1,8 @@
 from django.urls import path, re_path
 from . import views
 
-# namespace
 app_name = 'uiapp'
 
 urlpatterns = [
-    path('new/', views.QueryCreateView.as_view(), name='new')
+    path('create/', views.EmailaddressCreateView.as_view(), name='emailaddress_create'),
 ]
