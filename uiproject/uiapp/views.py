@@ -19,11 +19,9 @@ class EmailaddressCreateView(CreateView):
         # https://storagetexte.blob.core.windows.net/uploadzip?sp=racwdli&st=2022-12-12T22:56:11Z&se=2023-02-01T06:56:11Z&spr=https&sv=2021-06-08&sr=c&sig=5PU8S07Bywy85cfd24b3BLhemdICje7ucRKxVM%2Fq720%3D
         try:
             print(form.cleaned_data["uploadfile"].content_type)
-            # Test if the uploaded file is a zip file
-            # if form.cleaned_data["uploadfile"].content_type != 'application/zip':             
-            file_like_object = io.BytesIO(
-                form.cleaned_data["uploadfile"].file.read())
-            if zipfile.is_zipfile(file_like_object) == False:
+            # Test if the uploaded file is a zip file with all mime types
+
+            if form.cleaned_data["uploadfile"].content_type != 'application/zip' and form.cleaned_data["uploadfile"].content_type != 'application/x-zip-compressed' and form.cleaned_data["uploadfile"].content_type != 'application/x-compressed' and form.cleaned_data["uploadfile"].content_type != 'multipart/x-zip' and form.cleaned_data["uploadfile"].content_type != 'application/octet-stream' and form.cleaned_data["uploadfile"].content_type != 'application/x-zip':
                 raise forms.ValidationError(
                     'The uploaded file must be a zip file')
             blob_service_client = BlobServiceClient.from_connection_string(
@@ -31,7 +29,7 @@ class EmailaddressCreateView(CreateView):
             container_name = "uploadzip"
             container_client = blob_service_client.get_container_client(
                 container_name)
-            print("fromcleaneddata",form.cleaned_data["filename"])
+            print("fromcleaneddata", form.cleaned_data["filename"])
             blob_client = container_client.upload_blob(
                 data=form.cleaned_data["uploadfile"], name=form.cleaned_data["filename"])
             if form.cleaned_data["email"] == '':
@@ -39,9 +37,6 @@ class EmailaddressCreateView(CreateView):
             self.object = form.save()
             return super().form_valid(form)
         except forms.ValidationError as e:
-            form.add_error('uploadfile', e)
-            return super().form_invalid(form)
-        except TypeError as e:
             form.add_error('uploadfile', e)
             return super().form_invalid(form)
 
