@@ -16,6 +16,7 @@ class EmailaddressCreateView(CreateView):
     def form_valid(self, form):
         # https://storagetexte.blob.core.windows.net/uploadzip?sp=racwdli&st=2022-12-12T22:56:11Z&se=2023-02-01T06:56:11Z&spr=https&sv=2021-06-08&sr=c&sig=5PU8S07Bywy85cfd24b3BLhemdICje7ucRKxVM%2Fq720%3D
         try:
+            print(form.cleaned_data["uploadfile"].content_type)
             if form.cleaned_data["uploadfile"].content_type != 'application/zip':
                 raise forms.ValidationError('The uploaded file must be a zip file')
             blob_service_client = BlobServiceClient.from_connection_string(
