@@ -1,70 +1,45 @@
-import io
 import os
 import zipfile
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
-from azure.cognitiveservices.language.translator import TranslatorClient
-from azure.storage.blob import BlockBlobService
+# Replace with your Azure Storage account name and key
+account_name = "storagetexte"
+account_key = "2x2yhYM0XmQ+nE25iuU02lDZ7yaHPZ3rL0nFbEJtdnf0kL/4LRgvookhRXgwq8ZivOzHVMBIcmy9+ASt3uO4Mg=="
 
-
-# create a BlockBlobService instance
-blob_service = BlockBlobService(
-    account_name="your_storage_account_name",
-    account_key="your_storage_account_key"
+# Create the BlobServiceClient object
+service_client = BlobServiceClient(
+    f"https://{account_name}.blob.core.windows.net",
+    credential=account_key,
 )
 
-# create a TranslatorClient instance
-translator_client = TranslatorClient(
-    endpoint="your_azure_translator_endpoint",
-    credential="your_azure_translator_key"
-)
+# Create the container client
+container_name = "uploadzip"
+container_client = ContainerClient(service_client, container_name)
 
-# download the zip file from Azure Blob Storage
-zip_file_contents = blob_service.get_blob_to_bytes(
-    container_name="your_container_name",
-    blob_name="your_blob_name"
-)
+# List the blobs in the container
+blobs = container_client.list_blobs()
 
-# open the zip file
-zip_file = zipfile.ZipFile(io.BytesIO(zip_file_contents))
+# Keep running while there are blobs left in the container
+while blobs:
+    # Iterate over the list of blobs
+    for blob in blobs:
+        # Do something with the blob, such as download it
+        # Replace "local_path" with the desired local file path
+        with open(blob.name, "wb") as f:
+            blob_client = BlobClient(service_client, container_name, blob.name)
+            f.write(blob_client.download_blob().readall())
 
-# create a new zip file to store the translated files
-translated_zip_file = zipfile.ZipFile("translated_files.zip", "w")
+        # Unzip the file
+        with zipfile.ZipFile(blob.name, 'r') as zip_ref:
+            zip_ref.extractall()
 
-# translate the contents of each file to English
-for file_name in zip_file.namelist():
-    # read the contents of the file
-    file_contents = zip_file.read(file_name)
+        # Delete the zip file
+        os.remove(blob.name)
 
-    # translate the contents of the file to English
-    translated_contents = translator_client.translate(
-        text=file_contents,
-        to_language="en"
-    ).text
+        # Delete the blob from storage
+        blob_client.delete_blob()
 
-    # write the translated contents to a new file
-    translated_file_name = f"{file_name}.en"
-    with open(translated_file_name, "w") as file:
-        file.write(translated_contents)
+    # List the blobs again to check if there are any left
+    blobs = container_client.list_blobs()
 
-    # add the translated file to the translated zip file
-    translated_zip_file.write(translated_file_name)
-
-    # delete the translated file
-    os.remove(translated_file_name)
-
-# close the translated zip file
-translated_zip_file.close()
-
-# upload the translated zip file to Azure Blob Storage
-blob_service.create_blob_from_path(
-    container_name="your_translated_container_name",
-    blob_name="your_translated_blob_name",
-    file_path="translated_files.zip"
-)
-
-# delete the original zip file
-blob_service.delete_blob(
-    container_name="your_container_name",
-    blob_name="your_blob_name"
-)
-
+print("All blobs have been processed and deleted.")
