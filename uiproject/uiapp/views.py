@@ -4,8 +4,7 @@ from .forms import EmailaddressForm
 from .models import Emailaddress
 from azure.storage.blob import BlobServiceClient
 from django import forms
-import zipfile
-import io
+import requests
 
 # Create your views here.
 
@@ -16,7 +15,6 @@ class EmailaddressCreateView(CreateView):
     success_url = reverse_lazy('uiapp:emailaddress_create')
 
     def form_valid(self, form):
-        # https://storagetexte.blob.core.windows.net/uploadzip?sp=racwdli&st=2022-12-12T22:56:11Z&se=2023-02-01T06:56:11Z&spr=https&sv=2021-06-08&sr=c&sig=5PU8S07Bywy85cfd24b3BLhemdICje7ucRKxVM%2Fq720%3D
         try:
             print(form.cleaned_data["uploadfile"].content_type)
             # Test if the uploaded file is a zip file with all mime types
@@ -32,10 +30,15 @@ class EmailaddressCreateView(CreateView):
             print("fromcleaneddata", form.cleaned_data["filename"])
             blob_client = container_client.upload_blob(
                 data=form.cleaned_data["uploadfile"], name=form.cleaned_data["filename"])
+            # make a request to the backend
+            try:
+                requests.get("http://127.0.0.1:5000/process_blob/"+form.cleaned_data["filename"],timeout=0.000001)
+            except requests.exceptions.ReadTimeout: 
+                pass
             if form.cleaned_data["email"] == '':
                 return super().form_invalid(form)
             self.object = form.save()
-            return super().form_valid(form)
+            return super().form_valid(form) 
         except forms.ValidationError as e:
             form.add_error('uploadfile', e)
             return super().form_invalid(form)

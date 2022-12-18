@@ -1,1 +1,4 @@
 azure-storage-blob
+argostranslate
+flask
+langdetect
