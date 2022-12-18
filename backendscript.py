@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import Response
-import os
+import os, gc
 import zipfile
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 import argostranslate.package
@@ -34,7 +34,7 @@ cnx = mysql.connector.connect(
     host='***REMOVED***',
     database='emaildb'
 )
-
+cnx.autocommit=True
 # Create a cursor to execute queries
 cursor = cnx.cursor()
 
@@ -66,6 +66,7 @@ def process_blob(blname):
             f.write(blob_client.download_blob().readall())
     else:
         # return http error message
+        gc.collect()
         return Response(status=501)
     # Unzip the file
     unzip_dir = os.path.join(workpath, "dir"+blname)
@@ -87,16 +88,18 @@ def process_blob(blname):
             from_code = language
             to_code = "en"
 
-            # Download and install Argos Translate package
-            argostranslate.package.update_package_index()
-            available_packages = argostranslate.package.get_available_packages()
-            package_to_install = next(
-                filter(
-                    lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
+            if (from_code not in [i.code for i in argostranslate.translate.get_installed_languages()]) or (to_code not in [i.code for i in argostranslate.translate.get_installed_languages()]):
+                print("Language not installed, installing...")
+                # Download and install Argos Translate package
+                argostranslate.package.update_package_index()
+                available_packages = argostranslate.package.get_available_packages()
+                package_to_install = next(
+                    filter(
+                        lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
+                    )
                 )
-            )
-            argostranslate.package.install_from_path(
-                package_to_install.download())
+                argostranslate.package.install_from_path(
+                    package_to_install.download())
 
             # Translate
             translated_text = argostranslate.translate.translate(
@@ -119,7 +122,7 @@ def process_blob(blname):
 
     # Upload the zip file to the destination container
     with open(zip_path, "rb") as data:
-        bl_cl=destination_container_client.upload_blob(name=blname, data=data)
+        bl_cl=destination_container_client.upload_blob(name=blname+".zip", data=data)
 
     # Delete the zip file
     os.remove(zip_path)
@@ -134,15 +137,10 @@ def process_blob(blname):
     rec=cursor.fetchone()
     if rec:
         send_email(rec[0],bl_cl.url)
-
         cursor.execute(delquery,(blname,))
-
-        cnx.commit()
-
         print(cursor.rowcount, "record(s) deleted")
-
+    gc.collect()
     return Response(status=200)
-
 
 if __name__ == '__main__':
     app.run()
