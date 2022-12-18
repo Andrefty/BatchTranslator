@@ -7,9 +7,40 @@ import argostranslate.package
 import argostranslate.translate
 from langdetect import detect
 import shutil
+import mysql.connector
+from azure.communication.email import EmailClient, EmailContent, EmailAddress, EmailMessage, EmailRecipients
+
+def send_email(recipient_email,zipurl):
+    # Create an EmailClient using your Azure Communication Services connection string
+    email_client = EmailClient.from_connection_string("endpoint=https://csforemail.communication.azure.com/;accesskey=***REMOVED***")
+
+    # Set the recipient's email address, subject, and body of the email
+    to_email_address = EmailAddress(email=recipient_email)
+    recipi=EmailRecipients(to=[to_email_address])
+    subject = "Translated zip file"
+    body = "Here is the link to your translated zip file: "+zipurl
+    content=EmailContent(subject=subject,plain_text=body)
+    mess=EmailMessage(sender="***REMOVED***",content=content,recipients=recipi)
+
+    # Send the email
+    email_client.send(mess)
+    print(to_email_address)
 
 app = Flask(__name__)
 
+# Connect to the database
+cnx = mysql.connector.connect(
+    user='user',
+    password='***REMOVED***',
+    host='***REMOVED***',
+    database='emaildb'
+)
+
+# Create a cursor to execute queries
+cursor = cnx.cursor()
+
+# Check if the blname exists in the database
+query = "SELECT email FROM uiapp_emailaddress WHERE filename = %s"
 
 def zip_translated_files(zip_path, unzip_dir):
     with zipfile.ZipFile(zip_path, 'w') as zip_file:
@@ -89,7 +120,7 @@ def process_blob(blname):
 
     # Upload the zip file to the destination container
     with open(zip_path, "rb") as data:
-        destination_container_client.upload_blob(name=blname, data=data)
+        bl_cl=destination_container_client.upload_blob(name=blname, data=data)
 
     # Delete the zip file
     os.remove(zip_path)
@@ -99,6 +130,12 @@ def process_blob(blname):
 
     # Delete the blob from storage
     blob_client.delete_blob()
+
+    cursor.execute(query, (blname,))
+    rec=cursor.fetchone()
+    if rec:
+        send_email(rec[0],bl_cl.url)
+
 
     return Response(status=200)
 

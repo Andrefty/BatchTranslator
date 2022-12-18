@@ -2,3 +2,5 @@ azure-storage-blob
 argostranslate
 flask
 langdetect
+azure-communication-email
+mysql-connector-python
