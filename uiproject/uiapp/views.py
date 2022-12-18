@@ -27,7 +27,6 @@ class EmailaddressCreateView(CreateView):
             container_name = "uploadzip"
             container_client = blob_service_client.get_container_client(
                 container_name)
-            print("fromcleaneddata", form.cleaned_data["filename"])
             blob_client = container_client.upload_blob(
                 data=form.cleaned_data["uploadfile"], name=form.cleaned_data["filename"])
             # make a request to the backend
@@ -42,31 +41,3 @@ class EmailaddressCreateView(CreateView):
         except forms.ValidationError as e:
             form.add_error('uploadfile', e)
             return super().form_invalid(form)
-
-
-"""
-from django.views.generic import View
-from django.http import HttpResponse
-
-from azure.storage.blob import BlobServiceClient
-
-
-class FileUploadView(View):
-    def post(self, request):
-        # Get the uploaded file from the request
-        uploaded_file = request.FILES['file']
-
-        # Connect to Azure Blob Storage
-        blob_service_client = BlobServiceClient.from_connection_string("<your_connection_string>")
-
-        # Get the container where the file will be uploaded
-        container_name = "<your_container_name>"
-        container_client = blob_service_client.get_container_client(container_name)
-
-        # Upload the file
-        blob_client = container_client.upload_blob(uploaded_file, blob_name=uploaded_file.name)
-
-        # Return a successful response
-        return HttpResponse("File uploaded successfully.")
-
-"""

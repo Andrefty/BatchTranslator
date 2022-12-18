@@ -24,7 +24,6 @@ def send_email(recipient_email,zipurl):
 
     # Send the email
     email_client.send(mess)
-    print(to_email_address)
 
 app = Flask(__name__)
 
@@ -41,7 +40,7 @@ cursor = cnx.cursor()
 
 # Check if the blname exists in the database
 query = "SELECT email FROM uiapp_emailaddress WHERE filename = %s"
-
+delquery = "DELETE FROM uiapp_emailaddress WHERE filename = %s"
 def zip_translated_files(zip_path, unzip_dir):
     with zipfile.ZipFile(zip_path, 'w') as zip_file:
         for file in os.listdir(unzip_dir):
@@ -136,6 +135,11 @@ def process_blob(blname):
     if rec:
         send_email(rec[0],bl_cl.url)
 
+        cursor.execute(delquery,(blname,))
+
+        cnx.commit()
+
+        print(cursor.rowcount, "record(s) deleted")
 
     return Response(status=200)
 
