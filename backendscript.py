@@ -50,7 +50,7 @@ def zip_translated_files(zip_path, unzip_dir):
 
 @app.route('/process_blob/<blname>')
 def process_blob(blname):
-    workpath = os.path.join(os.path.abspath(__file__), "unzipfolder")
+    workpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "unzipfolder")
     # Create the BlobServiceClient object
     service_client = BlobServiceClient.from_connection_string(
         "***REMOVED***")
