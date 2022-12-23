@@ -32,7 +32,7 @@ class EmailaddressCreateView(CreateView):
             # make a request to the backend
             try:
                 requests.get("http://127.0.0.1:5000/process_blob/"+form.cleaned_data["filename"],timeout=1)
-            except requests.exceptions.ReadTimeout: 
+            except requests.exceptions.Timeout: 
                 pass
             if form.cleaned_data["email"] == '':
                 return super().form_invalid(form)
