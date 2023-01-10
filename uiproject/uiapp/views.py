@@ -23,7 +23,7 @@ class EmailaddressCreateView(CreateView):
                 raise forms.ValidationError(
                     'The uploaded file must be a zip file')
             blob_service_client = BlobServiceClient.from_connection_string(
-                "***REMOVED***")
+                "")
             container_name = "uploadzip"
             container_client = blob_service_client.get_container_client(
                 container_name)

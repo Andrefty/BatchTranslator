@@ -12,7 +12,7 @@ from azure.communication.email import EmailClient, EmailContent, EmailAddress, E
 
 def send_email(recipient_email,zipurl):
     # Create an EmailClient using your Azure Communication Services connection string
-    email_client = EmailClient.from_connection_string("endpoint=https://csforemail.communication.azure.com/;accesskey=***REMOVED***")
+    email_client = EmailClient.from_connection_string("endpoint=https://csforemail.communication.azure.com/;accesskey=")
 
     # Set the recipient's email address, subject, and body of the email
     to_email_address = EmailAddress(email=recipient_email)
@@ -20,7 +20,7 @@ def send_email(recipient_email,zipurl):
     subject = "Translated zip file"
     body = "Here is the link to your translated zip file: "+zipurl
     content=EmailContent(subject=subject,plain_text=body)
-    mess=EmailMessage(sender="***REMOVED***",content=content,recipients=recipi)
+    mess=EmailMessage(sender="",content=content,recipients=recipi)
 
     # Send the email
     email_client.send(mess)
@@ -30,8 +30,8 @@ app = Flask(__name__)
 # Connect to the database
 cnx = mysql.connector.connect(
     user='user',
-    password='***REMOVED***',
-    host='***REMOVED***',
+    password='',
+    host='',
     database='emaildb'
 )
 cnx.autocommit=True
@@ -53,7 +53,7 @@ def process_blob(blname):
     workpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "unzipfolder")
     # Create the BlobServiceClient object
     service_client = BlobServiceClient.from_connection_string(
-        "***REMOVED***")
+        "")
 
     # Create the container client
     container_name = "uploadzip"
@@ -115,7 +115,7 @@ def process_blob(blname):
 
     # Create the destination container client
     destination_service_client = BlobServiceClient.from_connection_string(
-        "***REMOVED***")
+        "")
     destination_container_name = "translatedzip"
     destination_container_client = destination_service_client.get_container_client(
         destination_container_name)
