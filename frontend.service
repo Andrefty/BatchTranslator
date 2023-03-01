@@ -1,0 +1,15 @@
+[Unit]
+Description=Batch Translator frontend service
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+StartLimitIntervalSec=500
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+
+ExecStart=/srv/uiproject/venv/bin/python3.9 /srv/uiproject/manage.py runserver 0.0.0.0:80
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Batch Translator backend service
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+StartLimitIntervalSec=500
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+
+ExecStart=/srv/venvback/bin/python3.10 -m flask --app=/srv/backendscript.py run --host=0.0.0.0 --port=80
+
+[Install]
+WantedBy=multi-user.target
